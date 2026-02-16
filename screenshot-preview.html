@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MRR Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --accent: #6366f1;
+  --accent-light: #eef2ff;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+.app { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+
+/* Header */
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+.header-sub { display: block; margin-top: 4px; font-size: 14px; color: var(--text-secondary); padding-left: 40px; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.badge { font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-light); padding: 4px 10px; border-radius: 6px; }
+.last-updated { font-size: 13px; color: var(--text-secondary); }
+
+/* KPI Cards */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow);
+}
+.kpi-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-value { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; font-family: "JetBrains Mono", monospace; }
+.kpi-sub { font-size: 13px; font-weight: 600; }
+.kpi-sub.positive { color: #34d399; }
+
+/* Chart */
+.chart-container {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow);
+}
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.chart-header h2 { font-size: 16px; font-weight: 600; }
+.chart-range { font-size: 13px; color: var(--text-secondary); font-family: "JetBrains Mono", monospace; }
+.chart-wrap { position: relative; height: 380px; }
+
+/* Table */
+.table-container {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow);
+}
+.table-container h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--text-secondary); padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border);
+}
+th.num, td.num { text-align: right; }
+td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--border); }
+td.mono { font-family: "JetBrains Mono", monospace; font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f9fafb; }
+
+.footer { text-align: center; font-size: 13px; color: var(--text-secondary); padding-top: 16px; }
+
+@media (max-width: 768px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .header { flex-direction: column; gap: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div>
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+          <rect width="28" height="28" rx="7" fill="#6366f1"/>
+          <path d="M7 19V12l4 3 3-6 4 4 3-5v11H7z" fill="white" opacity="0.9"/>
+        </svg>
+        <h1>MRR Dashboard</h1>
+      </div>
+      <span class="header-sub">Monthly Recurring Revenue</span>
+    </div>
+    <div class="header-right">
+      <span class="badge">Stripe + BigQuery</span>
+      <span class="last-updated">6 months loaded</span>
+    </div>
+  </header>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <span class="kpi-label">Current MRR</span>
+      <span class="kpi-value">$7,680</span>
+      <span class="kpi-sub positive">+7.4% MoM</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Active Subscriptions</span>
+      <span class="kpi-value">73</span>
+      <span class="kpi-sub positive">+3 from last month</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Active Customers</span>
+      <span class="kpi-value">66</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Total Growth</span>
+      <span class="kpi-value">+79.4%</span>
+      <span class="kpi-sub positive">from $4,280</span>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <div class="chart-header">
+      <h2>MRR Trend</h2>
+      <span class="chart-range">2025-09 — 2026-02</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="mrrChart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <h2>Monthly Breakdown</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th class="num">MRR</th>
+          <th class="num">Subscriptions</th>
+          <th class="num">Customers</th>
+          <th class="num">MoM Change</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <footer class="footer">Built with Stripe API · BigQuery · React · Recharts</footer>
+</div>
+
+<script>
+const data = [
+  { month: "2025-09", mrr_amount: 4280, active_subscriptions: 52, active_customers: 48 },
+  { month: "2025-10", mrr_amount: 5120, active_subscriptions: 58, active_customers: 53 },
+  { month: "2025-11", mrr_amount: 5890, active_subscriptions: 62, active_customers: 56 },
+  { month: "2025-12", mrr_amount: 6430, active_subscriptions: 65, active_customers: 59 },
+  { month: "2026-01", mrr_amount: 7150, active_subscriptions: 70, active_customers: 63 },
+  { month: "2026-02", mrr_amount: 7680, active_subscriptions: 73, active_customers: 66 },
+];
+
+const fmtCurrency = (v) => "$" + v.toLocaleString("en-US");
+const fmtPct = (v) => v == null ? "\u2014" : (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+
+// --- Chart ---
+const ctx = document.getElementById("mrrChart").getContext("2d");
+const gradient = ctx.createLinearGradient(0, 0, 0, 380);
+gradient.addColorStop(0, "rgba(99, 102, 241, 0.25)");
+gradient.addColorStop(1, "rgba(99, 102, 241, 0.02)");
+
+new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: data.map(d => d.month),
+    datasets: [{
+      label: "MRR",
+      data: data.map(d => d.mrr_amount),
+      borderColor: "#6366f1",
+      borderWidth: 2.5,
+      backgroundColor: gradient,
+      fill: true,
+      tension: 0.3,
+      pointBackgroundColor: "#6366f1",
+      pointBorderColor: "#fff",
+      pointBorderWidth: 2,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      pointHoverBorderWidth: 3,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: "#111827",
+        titleFont: { family: "'JetBrains Mono', monospace", size: 12 },
+        bodyFont: { family: "'JetBrains Mono', monospace", size: 16, weight: "bold" },
+        footerFont: { family: "'DM Sans', sans-serif", size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          title: (items) => items[0].label,
+          label: (item) => "  " + fmtCurrency(item.parsed.y),
+          afterLabel: (item) => {
+            const d = data[item.dataIndex];
+            return "  " + d.active_subscriptions + " subs \u00b7 " + d.active_customers + " customers";
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: "'DM Sans', sans-serif", size: 13 }, color: "#6b7280" },
+        border: { color: "#e2e4e9" }
+      },
+      y: {
+        grid: { color: "#e2e4e9", drawBorder: false },
+        ticks: {
+          font: { family: "'DM Sans', sans-serif", size: 13 },
+          color: "#6b7280",
+          callback: (v) => "$" + (v / 1000).toFixed(0) + "k"
+        },
+        border: { display: false }
+      }
+    }
+  }
+});
+
+// --- Table ---
+const tbody = document.getElementById("tableBody");
+data.forEach((row, i) => {
+  const prev = data[i - 1];
+  const change = prev ? ((row.mrr_amount - prev.mrr_amount) / prev.mrr_amount) * 100 : null;
+  const changeColor = change == null ? "#8a8f98" : change >= 0 ? "#059669" : "#dc2626";
+
+  const tr = document.createElement("tr");
+  tr.innerHTML =
+    '<td class="mono">' + row.month + '</td>' +
+    '<td class="num mono">' + fmtCurrency(row.mrr_amount) + '</td>' +
+    '<td class="num mono">' + row.active_subscriptions + '</td>' +
+    '<td class="num mono">' + row.active_customers + '</td>' +
+    '<td class="num mono" style="color:' + changeColor + '">' + fmtPct(change) + '</td>';
+  tbody.appendChild(tr);
+});
+</script>
+</body>
+</html>

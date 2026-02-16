@@ -1,0 +1,300 @@
+/* =============================================================================
+   MRR Dashboard — Styles
+   ============================================================================= */
+
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --accent: #6366f1;
+  --accent-light: #eef2ff;
+  --green: #059669;
+  --red: #dc2626;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* ---------- Header ---------- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.header-left .logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.header-sub {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding-left: 40px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.2px;
+}
+
+.last-updated {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ---------- KPI Cards ---------- */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: var(--shadow);
+}
+
+.kpi-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-family: "JetBrains Mono", "DM Sans", monospace;
+}
+
+.kpi-sub {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ---------- Chart ---------- */
+.chart-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.chart-range {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 380px;
+  color: var(--text-secondary);
+}
+
+/* Tooltip */
+.chart-tooltip {
+  background: var(--text-primary);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: var(--shadow-lg);
+}
+
+.tooltip-month {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.tooltip-mrr {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.tooltip-detail {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* ---------- Table ---------- */
+.table-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+
+.table-container h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+
+th.num,
+td.num {
+  text-align: right;
+}
+
+td {
+  padding: 12px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+td.month-cell {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+}
+
+td.num {
+  font-family: "JetBrains Mono", monospace;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: #f9fafb;
+}
+
+/* ---------- Error Banner ---------- */
+.error-banner {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  font-size: 13px;
+  color: #92400e;
+  margin-bottom: 24px;
+}
+
+.error-banner code {
+  font-size: 12px;
+  color: #b45309;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-top: 16px;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .header-right {
+    padding-left: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .app {
+    padding: 16px;
+  }
+}
