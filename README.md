@@ -36,13 +36,23 @@ A functional Monthly Recurring Revenue (MRR) dashboard that calculates MRR from 
 git clone <repo-url>
 cd mrr-dashboard
 cp .env.example .env
-# Edit .env with your Stripe and GCP credentials
 ```
 
-### 2. Install Python dependencies
+Edit `.env` with your credentials:
+
+```
+STRIPE_SECRET_KEY=sk_test_...
+GCP_PROJECT_ID=your-project-id
+GOOGLE_APPLICATION_CREDENTIALS=./service-account.json
+BQ_DATASET=mrr_dashboard
+API_PORT=5001
+```
+
+### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
+cd frontend && npm install && cd ..
 ```
 
 ### 3. Set up Stripe
@@ -55,67 +65,41 @@ pip install -r requirements.txt
 1. Create a GCP project at [console.cloud.google.com](https://console.cloud.google.com).
 2. Enable the **BigQuery API**.
 3. Create a service account with **BigQuery Data Editor** and **BigQuery Job User** roles.
-4. Download the JSON key file and set the path in `.env` (`GOOGLE_APPLICATION_CREDENTIALS`).
+4. Download the JSON key file, place it in the project root as `service-account.json`.
 5. Set `GCP_PROJECT_ID` in `.env`.
 
-### 5. Generate test data (Step 1)
+### 5. Run the pipeline
+
+**Option A — One command (PowerShell):**
+
+```powershell
+.\run.ps1
+```
+
+This runs all four steps in sequence: data generation, ETL, API server, and React frontend. Step 1 takes ~10–15 minutes due to Stripe test clock advancement.
+
+**Option B — Step by step:**
 
 ```bash
+# Step 1: Generate test data in Stripe (~10-15 min)
 python scripts/generate_data.py
-```
 
-This creates ~75 customers with subscriptions across 5 Stripe Test Clocks and advances them through 6 months of billing history. Takes ~10-15 minutes due to test clock advancement.
-
-**What it does:**
-- Creates 6 subscription plans (Starter $29/mo, Pro $79/mo, Business $199/mo, Enterprise $499/mo, plus annual variants)
-- Distributes customers across plans with realistic weighting
-- Simulates churn (~15%) and payment failures (~10%) across months
-- Outputs a `data_manifest.json` for reference
-
-### 6. Run ETL pipeline (Step 2)
-
-```bash
+# Step 2: Extract from Stripe, load into BigQuery
 python scripts/etl_stripe_to_bq.py
-```
 
-Extracts all subscriptions and invoices from Stripe, saves local JSON copies, and loads them into BigQuery tables (`mrr_dashboard.subscriptions` and `mrr_dashboard.invoices`).
-
-### 7. Verify SQL logic (Step 3)
-
-Open `sql/mrr_calculation.sql` in the [BigQuery Console](https://console.cloud.google.com/bigquery) and run it (replace `{PROJECT}` and `{DATASET}` with your values). You should see output like:
-
-| month   | active_subscriptions | active_customers | mrr_amount |
-|---------|---------------------|------------------|------------|
-| 2025-09 | 52                  | 48               | 4,280      |
-| 2025-10 | 58                  | 53               | 5,120      |
-| ...     | ...                 | ...              | ...        |
-
-Optionally, create the view for the API:
-```sql
--- In BigQuery Console, run sql/create_mrr_view.sql
--- (replace {PROJECT} and {DATASET} placeholders)
-```
-
-### 8. Start the API server
-
-```bash
+# Step 3: Start the API server
 python scripts/api_server.py
-```
 
-Runs on `http://localhost:5001`. Test it:
-```bash
-curl http://localhost:5001/api/mrr
-```
-
-### 9. Start the React frontend (Step 4)
-
-```bash
+# Step 4: In a new terminal, start the React frontend
 cd frontend
-npm install
 npm start
 ```
 
-Opens at `http://localhost:3000`. The React app proxies API requests to `localhost:5001`.
+The dashboard opens at `http://localhost:3000`. The API runs at `http://localhost:5001/api/mrr`.
+
+### 6. Verify SQL logic (optional)
+
+Open `sql/mrr_calculation.sql` in the [BigQuery Console](https://console.cloud.google.com/bigquery) and run it (replace `{PROJECT}` and `{DATASET}` with your values). The output should match what the dashboard displays.
 
 ---
 
@@ -127,6 +111,7 @@ mrr-dashboard/
 │   ├── generate_data.py       # Step 1: Stripe test data generator
 │   ├── etl_stripe_to_bq.py   # Step 2: ETL pipeline (Stripe → BigQuery)
 │   ├── api_server.py          # Flask API serving BigQuery data
+│   ├── data_manifest.json     # Generated: all customer/subscription IDs
 │   └── price_config.json      # Generated: plan/price IDs
 ├── sql/
 │   ├── mrr_calculation.sql    # Step 3: Full MRR query with MoM change
@@ -138,11 +123,44 @@ mrr-dashboard/
 │   │   ├── App.css            # Dashboard styles
 │   │   └── index.js           # React entry point
 │   └── package.json
+├── run.ps1                    # One-command pipeline runner (PowerShell)
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
 └── README.md
 ```
+
+---
+
+## Data Generation
+
+The generator script creates customers with subscriptions using Stripe Test Clocks to simulate 6 months of billing history. Test clocks allow Stripe to authentically generate invoices, charges, and subscription lifecycle events as if time had actually passed — no mocked data.
+
+**Subscription plans:**
+
+| Plan | Price | Interval |
+|------|-------|----------|
+| Starter | $29 | Monthly |
+| Pro | $79 | Monthly |
+| Business | $199 | Monthly |
+| Enterprise | $499 | Monthly |
+| Pro Annual | $790 | Yearly |
+| Business Annual | $1,990 | Yearly |
+
+Customers are distributed across plans with realistic weighting (heavier toward Starter/Pro). The script simulates ~15% churn and ~10% payment failures across months by canceling subscriptions and swapping payment methods to declining test cards.
+
+**Note:** Stripe's free-tier test mode limits customers per test clock (3 on free accounts). The number of customers scales with the number of test clocks configured.
+
+---
+
+## ETL Pipeline
+
+The ETL script (`etl_stripe_to_bq.py`) extracts subscriptions and invoices from Stripe's API and loads them into two BigQuery tables:
+
+- `mrr_dashboard.subscriptions` — subscription ID, customer, plan, status, dates, cancellation info
+- `mrr_dashboard.invoices` — invoice ID, customer, amounts, payment status, period dates
+
+The pipeline uses full-refresh (`WRITE_TRUNCATE`) on each run. Local JSON copies of the extracted data are saved to `scripts/extracts/` for debugging.
 
 ---
 
@@ -153,12 +171,10 @@ MRR is **not** just revenue — it's the **normalized monthly value of active re
 The SQL logic:
 
 1. **Generates a month spine** covering the full date range of the data.
-2. **Determines each subscription's active window** — from `created_at` to `ended_at` / `canceled_at`.
-3. **Normalizes plan amounts to monthly values:**
-   - Monthly plans: `plan_amount × quantity`
-   - Annual plans: `plan_amount × quantity ÷ 12`
-4. **Joins subscriptions × months** to count which subs were active during each month.
-5. **Aggregates** to get total MRR per month, with MoM change.
+2. **Determines each subscription's active window** — from `created_at` to `ended_at` / `canceled_at`. Subscriptions with `cancel_at_period_end = TRUE` remain active until their current period ends.
+3. **Normalizes plan amounts to monthly values:** monthly plans use `plan_amount × quantity`, annual plans divide by 12, and arbitrary intervals (quarterly, etc.) are handled via `plan_interval_count`.
+4. **Joins subscriptions × months** to determine which subscriptions were active during each month.
+5. **Aggregates** to total MRR per month, with month-over-month change.
 
 Only subscriptions with status `active`, `past_due`, or `canceled` (before their end date) are counted. Trialing subscriptions are excluded since they don't generate revenue.
 
@@ -166,10 +182,8 @@ Only subscriptions with status `active`, `past_due`, or `canceled` (before their
 
 ## Design Decisions
 
-- **Test Clocks over manual timestamps**: Using Stripe's Test Clock API ensures invoices, charges, and subscription lifecycle events are generated authentically by Stripe, not mocked.
-- **Full-refresh ETL**: The pipeline truncates and reloads tables on each run. For production, incremental loading with event-based triggers would be better.
+- **Test Clocks over manual timestamps**: Stripe's Test Clock API generates authentic invoices, charges, and lifecycle events. The data is real Stripe data, not mocked.
+- **Full-refresh ETL**: The pipeline truncates and reloads tables on each run. For production, incremental loading via webhooks would be more appropriate.
 - **Simple schema**: Two tables (`subscriptions`, `invoices`) rather than a fully normalized data model. The focus is on correct MRR logic, not schema design.
-- **Flask API layer**: Decouples the React frontend from BigQuery directly. In production, this could be a Cloud Function or Cloud Run service.
-- **Demo fallback data**: The React app includes hardcoded demo data so the frontend can be evaluated even without a live API connection.
-
----
+- **Flask API layer**: Decouples the React frontend from BigQuery. In production, this could be a Cloud Function or Cloud Run service.
+- **Demo fallback data**: The React app includes fallback demo data so the frontend renders even without a live API connection.
