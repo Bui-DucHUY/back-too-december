@@ -173,13 +173,3 @@ Only subscriptions with status `active`, `past_due`, or `canceled` (before their
 - **Demo fallback data**: The React app includes hardcoded demo data so the frontend can be evaluated even without a live API connection.
 
 ---
-
-## Interview Prep Notes
-
-**Accuracy Check:** The SQL-calculated MRR should closely match Stripe's built-in analytics for active subscriptions. Discrepancies can arise from: (a) timing of test clock advancement vs. subscription period boundaries, (b) prorations from mid-cycle changes, (c) how "past due" subs are counted.
-
-**Verification:** Cross-reference the SQL output against Stripe Dashboard → Billing → MRR. Also validate by manually summing active subscription amounts for a given month.
-
-**Architecture (Production):** Use Stripe webhooks to trigger incremental updates — a Cloud Function listens for `invoice.paid`, `customer.subscription.updated`, etc., and upserts into BigQuery. Supplement with a daily batch reconciliation job.
-
-**Retrospective:** For a production system handling millions: use Stripe's event stream (webhooks + Events API) for real-time data, partition BigQuery tables by month, add data quality checks and alerting, and implement idempotent processing to handle webhook retries.
