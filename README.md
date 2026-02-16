@@ -76,6 +76,7 @@ cd frontend && npm install && cd ..
 .\run.ps1
 ```
 
+Alternatively, open this file in Visual Studio Code and click "Run" (▶️). 
 This runs all four steps in sequence: data generation, ETL, API server, and React frontend. Step 1 takes ~10–15 minutes due to Stripe test clock advancement.
 
 **Option B — Step by step:**
