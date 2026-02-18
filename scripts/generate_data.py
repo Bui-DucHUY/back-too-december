@@ -35,7 +35,7 @@ if not stripe.api_key:
 # Configuration
 # ---------------------------------------------------------------------------
 NUM_CUSTOMERS = 75          # Target ~50-100 customers
-NUM_TEST_CLOCKS = 5         # Spread customers across clocks (Stripe limits objects per clock)
+NUM_TEST_CLOCKS = 25         # Spread customers across clocks (Stripe limits objects per clock)
 MONTHS_TO_SIMULATE = 6
 CUSTOMERS_PER_CLOCK = NUM_CUSTOMERS // NUM_TEST_CLOCKS
 
